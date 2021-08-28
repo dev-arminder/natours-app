@@ -81,7 +81,6 @@ module.exports = APIFeatures;
 // } else {
 //   query = query.select('-__v');
 // }
-
 //Pagination
 // const page = req.query.page * 1 || 1;
 // const limit = req.query.limit * 1 || 5;
