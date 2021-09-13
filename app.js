@@ -7,6 +7,16 @@ const globalErrorHandler = require('./controllers/errorController');
 const tourRoutes = require('./routes/tourRoutes');
 const userRotes = require('./routes/userRoutes');
 //intializing app
+
+//Uncaught Exception
+process.on('uncaughtException', err => {
+  console.log('Uncaught Exception * Shutting Down');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
 const app = express();
 
 //configuring dotenv
@@ -26,13 +36,6 @@ app.use('/api/v1/tours', tourRoutes);
 app.use('/api/v1/users', userRotes);
 
 app.all('*', (req, res, next) => {
-  // res.status(404).json({
-  //   status: 'Fail',
-  //   message: `Can't Find ${req.originalUrl} on this server`
-  // });
-  // const err = new Error(`Can't Find ${req.originalUrl} on this server`);
-  // err.status = 'fail';
-  // err.statusCode = 404;
   next(new AppError(`Can't Find ${req.originalUrl} on this server`, 404));
 });
 

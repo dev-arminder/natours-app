@@ -17,13 +17,17 @@ mongoose
     console.log(e);
   });
 
-// const testTour = new TourModel({
-//   name: 'The Forest hiker',
-//   rating: 4.7,
-//   price: 497
-// });
-// testTour.save();
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is Running on PORT ${PORT}`);
+});
+
+//Handling UNHandle Error Message { Wrong Password For MongoDB DataBAse } - Globally with Error Events
+//
+process.on('uncaughtException', err => {
+  console.log('Unhadle Rejection * Shutting Down');
+  console.log(err.name, err.message);
+  server.close(() => {
+    process.exit(1);
+  });
 });
