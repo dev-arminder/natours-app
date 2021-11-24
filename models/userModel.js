@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcrypt');
@@ -19,6 +20,11 @@ const userSchema = new mongoose.Schema({
   photo: {
     type: String
   },
+  role: {
+    type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user'
+  },
   password: {
     type: String,
     minLength: 8,
@@ -36,12 +42,15 @@ const userSchema = new mongoose.Schema({
       },
       message: 'Password Must be Same'
     }
-  }
+  },
+  passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date
 });
 
 userSchema.pre('save', async function(next) {
   //only runs this fuunction is password was modified
-  // if (this.isModified('password')) return next();
+  if (!this.isModified('password')) return next();
 
   //Hash Password with cost 12
   this.password = await bcrypt.hash(this.password, 12);
@@ -56,6 +65,35 @@ userSchema.methods.correctPassword = async function(
   userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+//changed Password Instance Method
+userSchema.methods.changedPasswordAfter = function(JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimeStamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+    // console.log(`UserSchema Method Changed Password`);
+    return JWTTimestamp < changedTimeStamp;
+  }
+  //False Mean Password Doesn't Changed
+  return false;
+};
+
+//Another Instance Method For Forget Password Functionality
+userSchema.methods.createPasswordResetToken = function() {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  //hashing resetToken
+  //this refer to instace of model
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  return resetToken;
 };
 
 const User = mongoose.model('User', userSchema);

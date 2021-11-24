@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 
 const tourController = require('./../controllers/tourContoller');
+const authController = require('./../controllers/authController');
 
 //param middleware - run this middleware for specific param - id
 // router.param('id', tourController.checkId);
 
-router.get('/', tourController.getAllTours);
+router.get('/', authController.protect, tourController.getAllTours);
 
 //5 Best and cheapest Tour - using alising
 router.get(
@@ -24,6 +25,11 @@ router.post('/', tourController.postTour);
 
 router.patch('/:id', tourController.patchTour);
 
-router.delete('/:id', tourController.deleteTour);
+router.delete(
+  '/:id',
+  authController.protect,
+  authController.restricitTo('admin', 'lead-guide'),
+  tourController.deleteTour
+);
 
 module.exports = router;
